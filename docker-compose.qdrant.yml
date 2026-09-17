@@ -1,6 +1,6 @@
 services:
   qdrant:
-    image: qdrant/qdrant:v1.19.1
+    image: qdrant/qdrant:latest
     container_name: qdrant-local
     restart: unless-stopped
     ports:
@@ -15,6 +15,28 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/6333 && echo -e 'GET /readyz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && head -1 <&3 | grep -q 200"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  bge-hybrid-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bge-hybrid-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./bge-m3-onnx:/app/bge-m3-onnx:ro
+    environment:
+      MODEL_DIR: /app/bge-m3-onnx
+      MAX_PASSAGES: "32"
+      MAX_BATCH_TOKENS: "16384"
+      DEFAULT_MAX_LENGTH: "512"
 
 volumes:
   qdrant_storage:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Iterator, Mapping, Sequence
@@ -237,6 +238,11 @@ def close_clients() -> None:
 
 
 if __name__ == "__main__":
+    # Windows consoles default to a legacy codepage that can't encode
+    # non-ASCII text (e.g. Vietnamese); force UTF-8 so printing never crashes.
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+        sys.stdout.reconfigure(encoding="utf-8")
+
     sample_documents = [
         Document(
             id="ubuntu-24-install",
